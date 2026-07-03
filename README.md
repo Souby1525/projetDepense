@@ -1,15 +1,16 @@
-# Application Web de Gestion des Dépenses
+# Gestion des Dépenses
 
-Application full stack professionnelle avec API REST Node.js/Express/MongoDB Atlas et interface React Vite/Tailwind CSS.
+Application full stack simple pour gérer les dépenses avec Node.js, Express, MongoDB Atlas, Mongoose, React, Vite et Tailwind CSS.
 
 ## Fonctionnalités
 
-- Ajouter, modifier, supprimer et afficher les dépenses
-- Recherche par description, note et mode de paiement
-- Filtre par catégorie et par période
-- Dashboard responsive avec total, moyenne, plus grosse dépense, nombre et catégorie la plus utilisée
-- Loader, notifications toast et confirmation avant suppression
-- Interface moderne, mobile first, en Tailwind CSS
+- Ajouter une dépense
+- Modifier une dépense
+- Supprimer une dépense
+- Afficher toutes les dépenses
+- Rechercher une dépense
+- Filtrer par catégorie et par date
+- Voir le total, la moyenne, la plus grosse dépense, le nombre de dépenses et la catégorie la plus utilisée
 
 ## Structure
 
@@ -28,25 +29,38 @@ frontend/
     components/
 ```
 
-## Installation Backend
+## Connexion MongoDB Atlas
+
+1. Crée une base de données MongoDB Atlas.
+2. Copie ton URI de connexion.
+3. Crée le fichier `backend/.env`.
+4. Colle ton URI dans `MONGO_URI`.
+
+Exemple :
+
+```env
+PORT=5000
+MONGO_URI=mongodb+srv://<username>:<password>@<cluster-url>/gestion_depenses?retryWrites=true&w=majority
+CLIENT_URL=http://localhost:5173
+```
+
+## Lancer le backend
 
 ```bash
 cd backend
 npm install
-cp .env.example .env
+copy .env.example .env
 npm run dev
 ```
 
-Dans `backend/.env`, remplacez `MONGO_URI` par votre URI MongoDB Atlas.
-
 API disponible sur `http://localhost:5000`.
 
-## Installation Frontend
+## Lancer le frontend
 
 ```bash
 cd frontend
 npm install
-cp .env.example .env
+copy .env.example .env
 npm run dev
 ```
 
@@ -66,27 +80,11 @@ DELETE /api/expenses/:id
 
 ```json
 {
-  "date": "2026-07-02",
+  "date": "2026-07-03",
   "category": "Alimentation",
   "description": "Courses du marché",
-  "amount": 1250000,
+  "amount": 125000,
   "paymentMethod": "Orange Money",
-  "note": "Achats hebdomadaires"
+  "note": "Achats de la semaine"
 }
-```
-
-## Variables d'environnement
-
-Backend:
-
-```env
-PORT=5000
-MONGO_URI=mongodb+srv://username:password@cluster0.xxxxx.mongodb.net/gestion_depenses?retryWrites=true&w=majority
-CLIENT_URL=http://localhost:5173
-```
-
-Frontend:
-
-```env
-VITE_API_URL=http://localhost:5000/api
 ```
