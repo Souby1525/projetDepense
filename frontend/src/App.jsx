@@ -61,7 +61,7 @@ function App() {
     doc.text("Export des dépenses", 14, 18);
 
     const columns = ["Date", "Catégorie", "Description", "Montant", "Paiement"];
-    const rows = expenses.map((e) => [toDateInputValue(e.date) || e.date, e.category || "", e.description || "", e.amount || "", e.paymentMethod || ""]);
+    const rows = expenses.map((e) => [toDateInputValue(e.date) || e.date, e.category || "", e.description || "", Number(e.amount) || 0, e.paymentMethod || ""]);
 
     doc.autoTable({
       startY: 24,
@@ -69,6 +69,60 @@ function App() {
       body: rows,
       styles: { fontSize: 10 }
     });
+
+    // Calculer la somme totale
+    const total = rows.reduce((sum, r) => sum + (Number(r[3]) || 0), 0);
+
+    // Ajouter une ligne de total sous le tableau
+    const finalY = doc.lastAutoTable ? doc.lastAutoTable.finalY || 24 : 24;
+    doc.setFontSize(12);
+    doc.text(`Total dépensé: ${total.toLocaleString()} GNF`, 14, finalY + 10);
+
+    // Vérifier les dépassements par jour (seuil = 1 000 000)
+    const threshold = 1000000;
+    const byDate = rows.reduce((acc, r) => {
+      const date = r[0] || "Inconnu";
+      acc[date] = (acc[date] || 0) + Number(r[3] || 0);
+      return acc;
+    }, {});
+
+    const exceeded = Object.entries(byDate).filter(([, sum]) => sum > threshold);
+    if (exceeded.length > 0) {
+      const messages = exceeded.map(([d, s]) => `${d}: ${Number(s).toLocaleString()} GNF`).join("\n");
+      const alertText = `Attention — journées dépassant ${threshold.toLocaleString()} GNF:\n${messages}`;
+
+      // Notification système (Notification API) si disponible
+      if (typeof Notification !== "undefined") {
+        if (Notification.permission === "granted") {
+          new Notification("Dépassement seuil", { body: messages });
+        } else if (Notification.permission !== "denied") {
+          Notification.requestPermission().then((perm) => {
+            if (perm === "granted") {
+              new Notification("Dépassement seuil", { body: messages });
+            } else {
+              window.alert(alertText);
+            }
+          }).catch(() => {
+            window.alert(alertText);
+          });
+        } else {
+          // permission denied
+          window.alert(alertText);
+        }
+      } else {
+        // fallback
+        window.alert(alertText);
+      }
+
+      // Ajouter section dans le PDF indiquant les dépassements
+      doc.setFontSize(11);
+      doc.text("Jours dépassant le seuil:", 14, finalY + 20);
+      let y = finalY + 26;
+      exceeded.forEach(([d, s]) => {
+        doc.text(`- ${d}: ${Number(s).toLocaleString()} GNF`, 14, y);
+        y += 6;
+      });
+    }
 
     const filename = `depenses_${new Date().toISOString().slice(0,10)}.pdf`;
     doc.save(filename);
