@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { FiPlus, FiRefreshCcw } from "react-icons/fi";
+import { FiPlus, FiRefreshCcw, FiDownload } from "react-icons/fi";
 import api from "./api/axios.js";
 import ExpenseForm, { emptyForm } from "./components/ExpenseForm.jsx";
 import ExpenseList from "./components/ExpenseList.jsx";
-import Filters from "./components/Filters.jsx";
 import Loader from "./components/Loader.jsx";
 import StatsCards from "./components/StatsCards.jsx";
 import Toast from "./components/Toast.jsx";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
 
 const initialSummary = {
   totalExpense: 0,
@@ -16,34 +17,20 @@ const initialSummary = {
   topCategory: "Aucune"
 };
 
-const initialFilters = {
-  search: "",
-  category: "",
-  startDate: "",
-  endDate: ""
-};
 
 const toDateInputValue = (date) => new Date(date).toISOString().slice(0, 10);
 
 function App() {
   const [expenses, setExpenses] = useState([]);
   const [summary, setSummary] = useState(initialSummary);
-  const [filters, setFilters] = useState(initialFilters);
+  
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState(null);
 
-  const queryParams = useMemo(() => {
-    const params = {};
-
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value) params[key] = value;
-    });
-
-    return params;
-  }, [filters]);
+  const queryParams = {};
 
   const showToast = (message, type = "success") => {
     setToast({ message, type });
@@ -67,6 +54,25 @@ function App() {
       setLoading(false);
     }
   }, [queryParams]);
+
+  const exportToPDF = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(16);
+    doc.text("Export des dépenses", 14, 18);
+
+    const columns = ["Date", "Catégorie", "Description", "Montant", "Paiement"];
+    const rows = expenses.map((e) => [toDateInputValue(e.date) || e.date, e.category || "", e.description || "", e.amount || "", e.paymentMethod || ""]);
+
+    doc.autoTable({
+      startY: 24,
+      head: [columns],
+      body: rows,
+      styles: { fontSize: 10 }
+    });
+
+    const filename = `depenses_${new Date().toISOString().slice(0,10)}.pdf`;
+    doc.save(filename);
+  };
 
   useEffect(() => {
     fetchData();
@@ -156,12 +162,20 @@ function App() {
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
-              onClick={fetchData}
+                onClick={fetchData}
               className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-bold text-slate-700 shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50"
             >
               <FiRefreshCcw className="h-4 w-4" />
               Actualiser
             </button>
+              <button
+                type="button"
+                onClick={exportToPDF}
+                className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-bold text-slate-700 shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50"
+              >
+                <FiDownload className="h-4 w-4" />
+                Exporter PDF
+              </button>
             <button
               type="button"
               onClick={() => window.scrollTo({ top: 420, behavior: "smooth" })}
@@ -177,8 +191,7 @@ function App() {
 
         <div className="grid gap-5 xl:grid-cols-[0.95fr_1.05fr]">
           <div className="space-y-5">
-            <Filters filters={filters} onChange={setFilters} onReset={() => setFilters(initialFilters)} />
-            <ExpenseForm
+              <ExpenseForm
               form={form}
               setForm={setForm}
               onSubmit={handleSubmit}

@@ -1,7 +1,19 @@
 import { FiCheck, FiPlus, FiRotateCcw } from "react-icons/fi";
-import { categories, fieldClass } from "./Filters.jsx";
 
-const paymentMethods = ["Espèces", "Orange Money", "Wave", "Carte Bancaire", "Virement"];
+const fieldClass =
+  "w-full rounded-2xl border-0 bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-700 outline-none ring-1 ring-transparent transition placeholder:text-slate-400 focus:bg-white focus:ring-4 focus:ring-violet-100";
+
+const categories = [
+  "Alimentation",
+  "Transport",
+  "Santé",
+  "Internet",
+  "Loyer",
+  "Éducation",
+  "Loisirs",
+  "Shopping",
+  "Autres"
+];
 
 const emptyForm = {
   date: new Date().toISOString().slice(0, 10),
@@ -36,13 +48,14 @@ const ExpenseForm = ({ form, setForm, onSubmit, editingId, onCancel, saving }) =
         </label>
         <label className="space-y-2">
           <span className="text-xs font-black uppercase text-slate-500">Catégorie</span>
-          <select name="category" value={form.category} onChange={handleChange} className={fieldClass} required>
-            {categories.map((category) => (
-              <option key={category} value={category}>
-                {category}
-              </option>
-            ))}
-          </select>
+          <input
+            name="category"
+            value={form.category}
+            onChange={handleChange}
+            className={fieldClass}
+            placeholder="Ex: Alimentation"
+            required
+          />
         </label>
         <label className="space-y-2 sm:col-span-2">
           <span className="text-xs font-black uppercase text-slate-500">Description</span>
@@ -68,16 +81,7 @@ const ExpenseForm = ({ form, setForm, onSubmit, editingId, onCancel, saving }) =
             required
           />
         </label>
-        <label className="space-y-2">
-          <span className="text-xs font-black uppercase text-slate-500">Paiement</span>
-          <select name="paymentMethod" value={form.paymentMethod} onChange={handleChange} className={fieldClass} required>
-            {paymentMethods.map((method) => (
-              <option key={method} value={method}>
-                {method}
-              </option>
-            ))}
-          </select>
-        </label>
+        {/* Champ paiement supprimé — la valeur par défaut est envoyée */}
         <label className="space-y-2 sm:col-span-2">
           <span className="text-xs font-black uppercase text-slate-500">Note</span>
           <textarea
@@ -113,5 +117,5 @@ const ExpenseForm = ({ form, setForm, onSubmit, editingId, onCancel, saving }) =
   );
 };
 
-export { emptyForm, paymentMethods };
+export { emptyForm };
 export default ExpenseForm;
