@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import Budget from "../models/Budget.js";
 import Expense from "../models/Expense.js";
 
@@ -6,10 +7,13 @@ const getCurrentMonthKey = () => {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 };
 
+const getOwnerId = (req) => new mongoose.Types.ObjectId(req.user.id);
+
 export const getBudget = async (req, res, next) => {
   try {
     const month = req.query.month || getCurrentMonthKey();
-    const budget = await Budget.findOne({ month, owner: req.user.id });
+    const owner = getOwnerId(req);
+    const budget = await Budget.findOne({ month, owner });
 
     res.json({
       success: true,
@@ -23,6 +27,7 @@ export const getBudget = async (req, res, next) => {
 export const upsertBudget = async (req, res, next) => {
   try {
     const { month, amount } = req.body;
+    const owner = getOwnerId(req);
 
     if (!month || !/^\d{4}-\d{2}$/.test(month)) {
       res.status(400);
@@ -35,8 +40,8 @@ export const upsertBudget = async (req, res, next) => {
     }
 
     const budget = await Budget.findOneAndUpdate(
-      { month, owner: req.user.id },
-      { amount: Number(amount), owner: req.user.id },
+      { month, owner },
+      { amount: Number(amount), owner },
       { new: true, upsert: true, setDefaultsOnInsert: true }
     );
 
@@ -53,7 +58,8 @@ export const upsertBudget = async (req, res, next) => {
 export const getBudgetProgress = async (req, res, next) => {
   try {
     const month = req.query.month || getCurrentMonthKey();
-    const budget = await Budget.findOne({ month, owner: req.user.id });
+    const owner = getOwnerId(req);
+    const budget = await Budget.findOne({ month, owner });
     const start = new Date(`${month}-01T00:00:00.000Z`);
     const end = new Date(start);
     end.setMonth(end.getMonth() + 1);
@@ -62,7 +68,7 @@ export const getBudgetProgress = async (req, res, next) => {
     const [summary] = await Expense.aggregate([
       {
         $match: {
-          owner: req.user.id,
+          owner,
           date: { $gte: start, $lte: end }
         }
       },

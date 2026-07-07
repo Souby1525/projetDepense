@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import Expense from "../models/Expense.js";
 import { isValidObjectId, normalizePaymentMethod, validateExpensePayload } from "../utils/validators.js";
 
@@ -31,11 +32,13 @@ const buildExpenseFilter = (query) => {
   return filter;
 };
 
+const getOwnerId = (req) => new mongoose.Types.ObjectId(req.user.id);
+
 export const getExpenses = async (req, res, next) => {
   try {
     const filter = buildExpenseFilter(req.query);
     if (req.user && req.user.id) {
-      filter.owner = req.user.id;
+      filter.owner = getOwnerId(req);
     }
 
     const expenses = await Expense.find(filter).sort({ date: -1, createdAt: -1 });
@@ -54,7 +57,7 @@ export const getExpenseSummary = async (req, res, next) => {
   try {
     const filter = buildExpenseFilter(req.query);
     if (req.user && req.user.id) {
-      filter.owner = req.user.id;
+      filter.owner = getOwnerId(req);
     }
     const matchStage = Object.keys(filter).length ? [{ $match: filter }] : [];
 
