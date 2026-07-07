@@ -1,14 +1,44 @@
 import Expense from "../models/Expense.js";
-import {
-  buildExpenseQuery,
-  isValidObjectId,
-  validateExpensePayload
-} from "../utils/validators.js";
+import { isValidObjectId, normalizePaymentMethod, validateExpensePayload } from "../utils/validators.js";
+
+const buildExpenseFilter = (query) => {
+  const { search, category, startDate, endDate } = query;
+  const filter = {};
+
+  if (category) {
+    filter.category = category;
+  }
+
+  if (search) {
+    const searchRegex = new RegExp(search.trim(), "i");
+    filter.$or = [{ description: searchRegex }, { note: searchRegex }, { category: searchRegex }];
+  }
+
+  if (startDate || endDate) {
+    filter.date = {};
+
+    if (startDate) {
+      filter.date.$gte = new Date(startDate);
+    }
+
+    if (endDate) {
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      filter.date.$lte = end;
+    }
+  }
+
+  return filter;
+};
 
 export const getExpenses = async (req, res, next) => {
   try {
-    const filters = buildExpenseQuery(req.query);
-    const expenses = await Expense.find(filters).sort({ date: -1, createdAt: -1 });
+    const filter = buildExpenseFilter(req.query);
+    if (req.user && req.user.id) {
+      filter.owner = req.user.id;
+    }
+
+    const expenses = await Expense.find(filter).sort({ date: -1, createdAt: -1 });
 
     res.json({
       success: true,
@@ -22,10 +52,14 @@ export const getExpenses = async (req, res, next) => {
 
 export const getExpenseSummary = async (req, res, next) => {
   try {
-    const filters = buildExpenseQuery(req.query);
+    const filter = buildExpenseFilter(req.query);
+    if (req.user && req.user.id) {
+      filter.owner = req.user.id;
+    }
+    const matchStage = Object.keys(filter).length ? [{ $match: filter }] : [];
 
     const [summary] = await Expense.aggregate([
-      { $match: filters },
+      ...matchStage,
       {
         $group: {
           _id: null,
@@ -39,7 +73,7 @@ export const getExpenseSummary = async (req, res, next) => {
     ]);
 
     const [topCategory] = await Expense.aggregate([
-      { $match: filters },
+      ...matchStage,
       { $group: { _id: "$category", count: { $sum: 1 } } },
       { $sort: { count: -1, _id: 1 } },
       { $limit: 1 }
@@ -69,10 +103,20 @@ export const createExpense = async (req, res, next) => {
       throw new Error(errors.join(", "));
     }
 
-    const expense = await Expense.create({
-      ...req.body,
-      amount: Number(req.body.amount)
-    });
+    const expenseData = {
+      date: req.body.date,
+      category: req.body.category,
+      description: req.body.description,
+      amount: Number(req.body.amount),
+      paymentMethod: normalizePaymentMethod(req.body.paymentMethod),
+      note: req.body.note || ""
+    };
+
+    if (req.user && req.user.id) {
+      expenseData.owner = req.user.id;
+    }
+
+    const expense = await Expense.create(expenseData);
 
     res.status(201).json({
       success: true,
@@ -98,11 +142,25 @@ export const updateExpense = async (req, res, next) => {
       throw new Error(errors.join(", "));
     }
 
-    const expense = await Expense.findByIdAndUpdate(
-      req.params.id,
-      { ...req.body, amount: Number(req.body.amount) },
-      { new: true, runValidators: true }
-    );
+    const expense = await Expense.findById(req.params.id);
+    if (!expense) {
+      res.status(404);
+      throw new Error("Dépense introuvable");
+    }
+
+    if (expense.owner && req.user && String(expense.owner) !== String(req.user.id)) {
+      res.status(403);
+      throw new Error("Action non autorisée");
+    }
+
+    expense.date = req.body.date;
+    expense.category = req.body.category;
+    expense.description = req.body.description;
+    expense.amount = Number(req.body.amount);
+    expense.paymentMethod = normalizePaymentMethod(req.body.paymentMethod);
+    expense.note = req.body.note || "";
+
+    await expense.save();
 
     if (!expense) {
       res.status(404);
@@ -126,12 +184,18 @@ export const deleteExpense = async (req, res, next) => {
       throw new Error("Identifiant invalide");
     }
 
-    const expense = await Expense.findByIdAndDelete(req.params.id);
-
+    const expense = await Expense.findById(req.params.id);
     if (!expense) {
       res.status(404);
       throw new Error("Dépense introuvable");
     }
+
+    if (expense.owner && req.user && String(expense.owner) !== String(req.user.id)) {
+      res.status(403);
+      throw new Error("Action non autorisée");
+    }
+
+    await expense.deleteOne();
 
     res.json({
       success: true,

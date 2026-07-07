@@ -1,4 +1,5 @@
 import express from "express";
+import { protect } from "../middlewares/authMiddleware.js";
 import {
   createExpense,
   deleteExpense,
@@ -8,6 +9,9 @@ import {
 } from "../controllers/expenseController.js";
 
 const router = express.Router();
+
+// Toutes les routes expenses nécessitent une authentification
+router.use(protect);
 
 router.get("/", getExpenses);
 router.get("/summary", getExpenseSummary);

@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { FiPlus, FiRefreshCcw, FiDownload } from "react-icons/fi";
-import api from "./api/axios.js";
+import api, { setAuthToken } from "./api/axios.js";
 import ExpenseForm, { emptyForm } from "./components/ExpenseForm.jsx";
 import ExpenseList from "./components/ExpenseList.jsx";
 import Loader from "./components/Loader.jsx";
 import StatsCards from "./components/StatsCards.jsx";
+import BudgetCard from "./components/BudgetCard.jsx";
+import Auth from "./components/Auth.jsx";
+import Profile from "./components/Profile.jsx";
 import Toast from "./components/Toast.jsx";
-import jsPDF from "jspdf";
-import "jspdf-autotable";
 
 const initialSummary = {
   totalExpense: 0,
@@ -15,6 +16,15 @@ const initialSummary = {
   highestExpense: 0,
   count: 0,
   topCategory: "Aucune"
+};
+
+const initialBudgetProgress = {
+  month: new Date().toISOString().slice(0, 7),
+  budgetAmount: 0,
+  totalExpense: 0,
+  progress: 0,
+  warningLevel: "normal",
+  count: 0
 };
 
 
@@ -29,8 +39,19 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState(null);
+  const [budgetProgress, setBudgetProgress] = useState(initialBudgetProgress);
+  const [showProfile, setShowProfile] = useState(false);
+  const [auth, setAuth] = useState(() => {
+    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    return { token, user: null };
+  });
 
-  const queryParams = {};
+  // apply token to axios if present
+  useEffect(() => {
+    if (auth.token) setAuthToken(auth.token);
+  }, [auth.token]);
+
+  const queryParams = useMemo(() => ({}), []);
 
   const showToast = (message, type = "success") => {
     setToast({ message, type });
@@ -41,21 +62,27 @@ function App() {
     setLoading(true);
 
     try {
-      const [expensesResponse, summaryResponse] = await Promise.all([
+      const [expensesResponse, summaryResponse, budgetProgressResponse] = await Promise.all([
         api.get("/expenses", { params: queryParams }),
-        api.get("/expenses/summary", { params: queryParams })
+        api.get("/expenses/summary", { params: queryParams }),
+        api.get("/budget/progress")
       ]);
 
       setExpenses(expensesResponse.data.data || []);
       setSummary(summaryResponse.data.data || initialSummary);
+      setBudgetProgress(budgetProgressResponse.data.data || initialBudgetProgress);
     } catch (error) {
-      showToast(error.response?.data?.message || "Impossible de charger les dépenses", "error");
+      showToast(error.response?.data?.message || "Impossible de charger les données", "error");
     } finally {
       setLoading(false);
     }
   }, [queryParams]);
 
-  const exportToPDF = () => {
+  const exportToPDF = async () => {
+    const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
+      import("jspdf"),
+      import("jspdf-autotable")
+    ]);
     const doc = new jsPDF();
     doc.setFontSize(16);
     doc.text("Export des dépenses", 14, 18);
@@ -63,7 +90,7 @@ function App() {
     const columns = ["Date", "Catégorie", "Description", "Montant", "Paiement"];
     const rows = expenses.map((e) => [toDateInputValue(e.date) || e.date, e.category || "", e.description || "", Number(e.amount) || 0, e.paymentMethod || ""]);
 
-    doc.autoTable({
+    autoTable(doc, {
       startY: 24,
       head: [columns],
       body: rows,
@@ -129,8 +156,24 @@ function App() {
   };
 
   useEffect(() => {
+    // si non authentifié, ne pas fetcher les données privées
+    if (!auth.token) return;
     fetchData();
   }, [fetchData]);
+
+  useEffect(() => {
+    const initializeAuth = async () => {
+      if (!auth.token) return;
+      try {
+        const res = await api.get("/auth/me");
+        setAuth((a) => ({ ...a, user: res.data.data }));
+      } catch (e) {
+        // token invalide
+        setAuth({ token: null, user: null });
+      }
+    };
+    initializeAuth();
+  }, [auth.token]);
 
   const resetForm = () => {
     setForm(emptyForm);
@@ -156,6 +199,20 @@ function App() {
       await fetchData();
     } catch (error) {
       showToast(error.response?.data?.message || "Enregistrement impossible", "error");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const saveBudget = async (budget) => {
+    setSaving(true);
+    try {
+      const response = await api.post("/budget", budget);
+      setBudgetProgress((prev) => ({ ...prev, ...response.data.data }));
+      showToast("Budget enregistré avec succès");
+      await fetchData();
+    } catch (error) {
+      showToast(error.response?.data?.message || "Impossible d'enregistrer le budget", "error");
     } finally {
       setSaving(false);
     }
@@ -188,9 +245,29 @@ function App() {
     }
   };
 
+  const logout = () => {
+    setAuthToken(null);
+    setAuth({ token: null, user: null });
+    setExpenses([]);
+    setSummary(initialSummary);
+    setBudgetProgress(initialBudgetProgress);
+    showToast("Déconnecté", "success");
+  };
+
   return (
     <main className="min-h-screen bg-[#f7f7fb] text-slate-950">
       <Toast toast={toast} />
+      {!auth.token ? (
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-5 px-4 py-8 sm:px-6 lg:px-8">
+          <Auth
+            onAuth={({ token, user }) => {
+              setAuth({ token, user });
+              setAuthToken(token);
+              fetchData();
+            }}
+          />
+        </div>
+      ) : (
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-5 px-4 py-3 sm:px-6 lg:px-8">
         <nav className="flex items-center justify-between gap-4 rounded-full bg-white/85 px-3 py-2 shadow-sm ring-1 ring-slate-200/70 backdrop-blur">
           <div className="flex items-center gap-3">
@@ -201,6 +278,23 @@ function App() {
           </div>
           <div className="hidden items-center rounded-full bg-slate-100 p-1 text-xs font-bold text-slate-500 sm:flex">
             <span className="rounded-full bg-slate-950 px-4 py-2 text-white shadow-sm">Gestion des dépenses</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setShowProfile((s) => !s)}
+              className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-700 hover:bg-slate-200"
+            >
+              Profil
+            </button>
+            <span className="text-sm font-bold text-slate-700">{auth.user?.name || auth.user?.email}</span>
+            <button
+              type="button"
+              onClick={logout}
+              className="rounded-full bg-red-50 px-3 py-1 text-xs font-black text-red-600 hover:bg-red-100"
+            >
+              Déconnexion
+            </button>
           </div>
         </nav>
 
@@ -243,9 +337,18 @@ function App() {
 
         <StatsCards summary={summary} expenses={expenses} />
 
-        <div className="grid gap-5 xl:grid-cols-[0.95fr_1.05fr]">
+        <BudgetCard budgetProgress={budgetProgress} onSaveBudget={saveBudget} saving={saving} />
+
+        <div className="grid gap-5 xl:grid-cols-[1fr_0.9fr]">
           <div className="space-y-5">
-              <ExpenseForm
+            {showProfile && (
+              <Profile
+                authUser={auth.user}
+                onUpdate={(user) => setAuth((a) => ({ ...a, user }))}
+                showToast={showToast}
+              />
+            )}
+            <ExpenseForm
               form={form}
               setForm={setForm}
               onSubmit={handleSubmit}
@@ -257,6 +360,7 @@ function App() {
           {loading ? <Loader /> : <ExpenseList expenses={expenses} onEdit={handleEdit} onDelete={handleDelete} />}
         </div>
       </div>
+      )}
     </main>
   );
 }

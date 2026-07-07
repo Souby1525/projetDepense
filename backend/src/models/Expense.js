@@ -1,25 +1,5 @@
 import mongoose from "mongoose";
 
-export const CATEGORIES = [
-  "Alimentation",
-  "Transport",
-  "Santé",
-  "Internet",
-  "Loyer",
-  "Éducation",
-  "Loisirs",
-  "Shopping",
-  "Autres"
-];
-
-export const PAYMENT_METHODS = [
-  "Espèces",
-  "Orange Money",
-  "Wave",
-  "Carte Bancaire",
-  "Virement"
-];
-
 const expenseSchema = new mongoose.Schema(
   {
     date: {
@@ -29,10 +9,9 @@ const expenseSchema = new mongoose.Schema(
     category: {
       type: String,
       required: [true, "La catégorie est obligatoire"],
-      enum: {
-        values: CATEGORIES,
-        message: "Catégorie invalide"
-      }
+      trim: true,
+      minlength: [2, "La catégorie doit contenir au moins 2 caractères"],
+      maxlength: [80, "La catégorie ne peut pas dépasser 80 caractères"]
     },
     description: {
       type: String,
@@ -48,11 +27,18 @@ const expenseSchema = new mongoose.Schema(
     },
     paymentMethod: {
       type: String,
-      required: [true, "Le mode de paiement est obligatoire"],
+      required: [true, "Le moyen de paiement est obligatoire"],
+      trim: true,
       enum: {
-        values: PAYMENT_METHODS,
-        message: "Mode de paiement invalide"
-      }
+        values: ["Espèces", "Orange Money", "Wave", "Virement"],
+        message: "Le moyen de paiement est invalide"
+      },
+      default: "Espèces"
+    },
+    owner: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null
     },
     note: {
       type: String,

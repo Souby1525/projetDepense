@@ -24,10 +24,10 @@ const ExpenseList = ({ expenses, onEdit, onDelete }) => (
   <section className="rounded-[1.75rem] bg-white p-5 shadow-soft ring-1 ring-slate-100">
     <div className="mb-5 flex items-center justify-between gap-4">
       <div>
-        <h2 className="text-xl font-black text-slate-950">Recent Transactions</h2>
+        <h2 className="text-xl font-black text-slate-950">Transactions récentes</h2>
         <p className="mt-1 text-xs font-semibold text-slate-500">Dernières dépenses enregistrées</p>
       </div>
-      <span className="text-xs font-black text-violet-600">See All</span>
+      <span className="text-xs font-black text-violet-600">Voir tout</span>
     </div>
 
     {expenses.length === 0 ? (
