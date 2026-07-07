@@ -30,13 +30,13 @@ const BudgetCard = ({ budgetProgress, onSaveBudget, saving }) => {
       : "Sous seuil";
 
   return (
-    <section className="rounded-[1.75rem] bg-white p-5 shadow-soft ring-1 ring-slate-100">
+    <section className="rounded-lg bg-white p-4 shadow-soft ring-1 ring-slate-100 sm:p-5">
       <div className="mb-4 flex items-start justify-between gap-3">
         <div>
           <h2 className="text-xl font-black text-slate-950">Budget mensuel</h2>
           <p className="mt-1 text-xs font-semibold text-slate-500">Fixez votre plafond et suivez l’avancement.</p>
         </div>
-        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-violet-50 text-violet-700">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-violet-50 text-violet-700">
           <FiDollarSign className="h-5 w-5" />
         </div>
       </div>
@@ -48,7 +48,7 @@ const BudgetCard = ({ budgetProgress, onSaveBudget, saving }) => {
             type="month"
             value={month}
             onChange={(event) => setMonth(event.target.value)}
-            className="w-full rounded-2xl border-0 bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-700 outline-none ring-1 ring-transparent transition focus:bg-white focus:ring-4 focus:ring-violet-100"
+            className="w-full rounded-lg border-0 bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-700 outline-none ring-1 ring-transparent transition focus:bg-white focus:ring-4 focus:ring-violet-100"
             required
           />
         </label>
@@ -61,7 +61,7 @@ const BudgetCard = ({ budgetProgress, onSaveBudget, saving }) => {
             step="1"
             value={amount}
             onChange={(event) => setAmount(event.target.value)}
-            className="w-full rounded-2xl border-0 bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-700 outline-none ring-1 ring-transparent transition focus:bg-white focus:ring-4 focus:ring-violet-100"
+            className="w-full rounded-lg border-0 bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-700 outline-none ring-1 ring-transparent transition focus:bg-white focus:ring-4 focus:ring-violet-100"
             placeholder="0"
             required
           />
@@ -70,32 +70,32 @@ const BudgetCard = ({ budgetProgress, onSaveBudget, saving }) => {
         <button
           type="submit"
           disabled={saving}
-          className="inline-flex items-center justify-center gap-2 rounded-full bg-violet-600 px-5 py-3 text-sm font-black text-white shadow-lg shadow-violet-600/20 transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-70"
+          className="inline-flex items-center justify-center gap-2 rounded-lg bg-violet-600 px-5 py-3 text-sm font-black text-white shadow-lg shadow-violet-600/20 transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-70"
         >
           <FiSave className="h-4 w-4" />
           {saving ? "Enregistrement..." : "Enregistrer"}
         </button>
       </form>
 
-      <div className="mt-6 rounded-3xl bg-slate-50 p-4">
+      <div className="mt-6 rounded-lg bg-slate-50 p-4">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Budget pour</p>
             <p className="mt-2 text-lg font-black text-slate-950">{budgetProgress.month}</p>
           </div>
-          <span className={`inline-flex rounded-full px-3 py-1 text-xs font-black ${statusStyles[budgetProgress.warningLevel] || statusStyles.normal}`}>
+          <span className={`inline-flex rounded-lg px-3 py-1 text-xs font-black ${statusStyles[budgetProgress.warningLevel] || statusStyles.normal}`}>
             {statusLabel}
           </span>
         </div>
 
-        <div className="mt-6 flex items-end justify-between gap-4">
-          <div>
+        <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div className="min-w-0">
             <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Budget défini</p>
-            <p className="mt-2 text-3xl font-black text-slate-950">
+            <p className="mt-2 break-words text-2xl font-black text-slate-950 sm:text-3xl">
               {budgetProgress.budgetAmount > 0 ? formatCurrency(budgetProgress.budgetAmount) : "Aucun budget"}
             </p>
           </div>
-          <div className="text-right">
+          <div className="min-w-0 sm:text-right">
             <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Dépensé</p>
             <p className="mt-2 text-lg font-black text-emerald-600">{formatCurrency(budgetProgress.totalExpense)}</p>
           </div>

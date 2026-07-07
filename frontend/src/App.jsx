@@ -268,30 +268,30 @@ function App() {
           />
         </div>
       ) : (
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-5 px-4 py-3 sm:px-6 lg:px-8">
-        <nav className="flex items-center justify-between gap-4 rounded-full bg-white/85 px-3 py-2 shadow-sm ring-1 ring-slate-200/70 backdrop-blur">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-violet-600 text-sm font-black text-white">
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-5 px-3 py-3 sm:px-6 lg:px-8">
+        <nav className="flex flex-col gap-3 rounded-lg bg-white/90 px-3 py-3 shadow-sm ring-1 ring-slate-200/70 backdrop-blur sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-violet-600 text-sm font-black text-white">
               D
             </div>
-            <span className="text-lg font-black tracking-tight">Dépenses</span>
+            <span className="truncate text-lg font-black tracking-tight">Dépenses</span>
           </div>
-          <div className="hidden items-center rounded-full bg-slate-100 p-1 text-xs font-bold text-slate-500 sm:flex">
-            <span className="rounded-full bg-slate-950 px-4 py-2 text-white shadow-sm">Gestion des dépenses</span>
+          <div className="hidden items-center rounded-lg bg-slate-100 p-1 text-xs font-bold text-slate-500 lg:flex">
+            <span className="rounded-md bg-slate-950 px-4 py-2 text-white shadow-sm">Gestion des dépenses</span>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2 sm:justify-end">
             <button
               type="button"
               onClick={() => setShowProfile((s) => !s)}
-              className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-700 hover:bg-slate-200"
+              className="rounded-lg bg-slate-100 px-3 py-2 text-xs font-black text-slate-700 hover:bg-slate-200"
             >
               Profil
             </button>
-            <span className="text-sm font-bold text-slate-700">{auth.user?.name || auth.user?.email}</span>
+            <span className="max-w-[11rem] truncate text-sm font-bold text-slate-700 sm:max-w-[14rem]">{auth.user?.name || auth.user?.email}</span>
             <button
               type="button"
               onClick={logout}
-              className="rounded-full bg-red-50 px-3 py-1 text-xs font-black text-red-600 hover:bg-red-100"
+              className="rounded-lg bg-red-50 px-3 py-2 text-xs font-black text-red-600 hover:bg-red-100"
             >
               Déconnexion
             </button>
@@ -307,11 +307,11 @@ function App() {
               Ajoutez, modifiez, supprimez et suivez vos dépenses depuis une seule interface.
             </p>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="grid w-full grid-cols-1 gap-2 sm:w-auto sm:grid-cols-3">
             <button
               type="button"
                 onClick={fetchData}
-              className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-bold text-slate-700 shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50"
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-4 py-2 text-xs font-bold text-slate-700 shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50"
             >
               <FiRefreshCcw className="h-4 w-4" />
               Actualiser
@@ -319,7 +319,7 @@ function App() {
               <button
                 type="button"
                 onClick={exportToPDF}
-                className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-bold text-slate-700 shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50"
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-4 py-2 text-xs font-bold text-slate-700 shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50"
               >
                 <FiDownload className="h-4 w-4" />
                 Exporter PDF
@@ -327,7 +327,7 @@ function App() {
             <button
               type="button"
               onClick={() => window.scrollTo({ top: 420, behavior: "smooth" })}
-              className="inline-flex items-center gap-2 rounded-full bg-violet-600 px-4 py-2 text-xs font-bold text-white shadow-lg shadow-violet-600/20 transition hover:bg-violet-700"
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-violet-600 px-4 py-2 text-xs font-bold text-white shadow-lg shadow-violet-600/20 transition hover:bg-violet-700"
             >
               <FiPlus className="h-4 w-4" />
               Ajouter une dépense

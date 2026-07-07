@@ -9,7 +9,7 @@ const getCurrentMonthKey = () => {
 export const getBudget = async (req, res, next) => {
   try {
     const month = req.query.month || getCurrentMonthKey();
-    const budget = await Budget.findOne({ month });
+    const budget = await Budget.findOne({ month, owner: req.user.id });
 
     res.json({
       success: true,
@@ -35,8 +35,8 @@ export const upsertBudget = async (req, res, next) => {
     }
 
     const budget = await Budget.findOneAndUpdate(
-      { month },
-      { amount: Number(amount) },
+      { month, owner: req.user.id },
+      { amount: Number(amount), owner: req.user.id },
       { new: true, upsert: true, setDefaultsOnInsert: true }
     );
 
@@ -53,7 +53,7 @@ export const upsertBudget = async (req, res, next) => {
 export const getBudgetProgress = async (req, res, next) => {
   try {
     const month = req.query.month || getCurrentMonthKey();
-    const budget = await Budget.findOne({ month });
+    const budget = await Budget.findOne({ month, owner: req.user.id });
     const start = new Date(`${month}-01T00:00:00.000Z`);
     const end = new Date(start);
     end.setMonth(end.getMonth() + 1);
@@ -62,6 +62,7 @@ export const getBudgetProgress = async (req, res, next) => {
     const [summary] = await Expense.aggregate([
       {
         $match: {
+          owner: req.user.id,
           date: { $gte: start, $lte: end }
         }
       },

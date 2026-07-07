@@ -148,7 +148,7 @@ export const updateExpense = async (req, res, next) => {
       throw new Error("Dépense introuvable");
     }
 
-    if (expense.owner && req.user && String(expense.owner) !== String(req.user.id)) {
+    if (!expense.owner || !req.user || String(expense.owner) !== String(req.user.id)) {
       res.status(403);
       throw new Error("Action non autorisée");
     }
@@ -190,7 +190,7 @@ export const deleteExpense = async (req, res, next) => {
       throw new Error("Dépense introuvable");
     }
 
-    if (expense.owner && req.user && String(expense.owner) !== String(req.user.id)) {
+    if (!expense.owner || !req.user || String(expense.owner) !== String(req.user.id)) {
       res.status(403);
       throw new Error("Action non autorisée");
     }

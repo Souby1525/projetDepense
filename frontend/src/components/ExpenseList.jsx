@@ -21,23 +21,23 @@ const categoryTone = {
 };
 
 const ExpenseList = ({ expenses, onEdit, onDelete }) => (
-  <section className="rounded-[1.75rem] bg-white p-5 shadow-soft ring-1 ring-slate-100">
+  <section className="rounded-lg bg-white p-4 shadow-soft ring-1 ring-slate-100 sm:p-5">
     <div className="mb-5 flex items-center justify-between gap-4">
       <div>
         <h2 className="text-xl font-black text-slate-950">Transactions récentes</h2>
         <p className="mt-1 text-xs font-semibold text-slate-500">Dernières dépenses enregistrées</p>
       </div>
-      <span className="text-xs font-black text-violet-600">Voir tout</span>
+      <span className="shrink-0 text-xs font-black text-violet-600">Voir tout</span>
     </div>
 
     {expenses.length === 0 ? (
-      <div className="rounded-3xl bg-slate-50 p-8 text-center ring-1 ring-slate-100">
+      <div className="rounded-lg bg-slate-50 p-8 text-center ring-1 ring-slate-100">
         <p className="text-lg font-black text-slate-950">Aucune dépense trouvée</p>
         <p className="mt-2 text-sm font-semibold text-slate-500">Ajoutez une dépense ou ajustez les filtres.</p>
       </div>
     ) : (
       <div className="overflow-hidden">
-        <div className="hidden rounded-2xl bg-slate-50 px-4 py-3 text-[11px] font-black uppercase text-slate-400 md:grid md:grid-cols-[1.3fr_0.8fr_0.8fr_0.9fr_0.8fr]">
+        <div className="hidden rounded-lg bg-slate-50 px-4 py-3 text-[11px] font-black uppercase text-slate-400 md:grid md:grid-cols-[minmax(0,1.3fr)_minmax(0,0.8fr)_minmax(0,0.8fr)_minmax(0,0.9fr)_auto]">
           <span>Description</span>
           <span>Catégorie</span>
           <span>Date</span>
@@ -49,7 +49,7 @@ const ExpenseList = ({ expenses, onEdit, onDelete }) => (
           {expenses.map((expense) => (
             <article
               key={expense._id}
-              className="animate-fadeUp rounded-3xl border border-slate-100 bg-white p-4 transition duration-200 hover:bg-slate-50 md:grid md:grid-cols-[1.3fr_0.8fr_0.8fr_0.9fr_0.8fr] md:items-center md:gap-3 md:rounded-2xl"
+              className="animate-fadeUp rounded-lg border border-slate-100 bg-white p-4 transition duration-200 hover:bg-slate-50 md:grid md:grid-cols-[minmax(0,1.3fr)_minmax(0,0.8fr)_minmax(0,0.8fr)_minmax(0,0.9fr)_auto] md:items-center md:gap-3"
             >
               <div className="min-w-0">
                 <h3 className="break-words text-sm font-black text-slate-950">{expense.description}</h3>
@@ -61,7 +61,7 @@ const ExpenseList = ({ expenses, onEdit, onDelete }) => (
               </div>
 
               <div className="mt-4 md:mt-0">
-                <span className={`inline-flex rounded-full px-3 py-1 text-[11px] font-black ${categoryTone[expense.category] || categoryTone.Autres}`}>
+                <span className={`inline-flex max-w-full break-words rounded-lg px-3 py-1 text-[11px] font-black ${categoryTone[expense.category] || categoryTone.Autres}`}>
                   {expense.category}
                 </span>
               </div>
@@ -77,7 +77,7 @@ const ExpenseList = ({ expenses, onEdit, onDelete }) => (
                 <button
                   type="button"
                   onClick={() => onEdit(expense)}
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-700 transition hover:bg-violet-100 hover:text-violet-700"
+                  className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 text-slate-700 transition hover:bg-violet-100 hover:text-violet-700"
                   title="Modifier"
                   aria-label="Modifier"
                 >
@@ -86,7 +86,7 @@ const ExpenseList = ({ expenses, onEdit, onDelete }) => (
                 <button
                   type="button"
                   onClick={() => onDelete(expense._id)}
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-red-50 text-red-600 transition hover:bg-red-100"
+                  className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-50 text-red-600 transition hover:bg-red-100"
                   title="Supprimer"
                   aria-label="Supprimer"
                 >

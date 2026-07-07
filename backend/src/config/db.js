@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import Budget from "../models/Budget.js";
 
 const connectDB = async () => {
   try {
@@ -9,6 +10,7 @@ const connectDB = async () => {
     }
 
     const conn = await mongoose.connect(mongoUri);
+    await Budget.syncIndexes();
     console.log(`MongoDB connecté: ${conn.connection.host}`);
   } catch (error) {
     console.error(`Erreur MongoDB: ${error.message}`);
